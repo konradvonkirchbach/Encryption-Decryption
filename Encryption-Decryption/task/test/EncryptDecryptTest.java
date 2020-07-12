@@ -1,90 +1,105 @@
 import encryptdecrypt.Main;
+import org.hyperskill.hstest.common.FileUtils;
 import org.hyperskill.hstest.stage.StageTest;
 import org.hyperskill.hstest.testcase.CheckResult;
 import org.hyperskill.hstest.testcase.TestCase;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
-
-class Attach {
-    String original;
-    int shift;
-    String output;
-
-    public Attach(String original, int shift, String output) {
-        this.original = original;
-        this.shift = shift;
-        this.output = output;
-    }
-}
-
-public class EncryptDecryptTest extends StageTest<Attach> {
+public class EncryptDecryptTest extends StageTest<String> {
     public EncryptDecryptTest() {
         super(Main.class);
     }
 
     @Override
-    public List<TestCase<Attach>> generate() {
+    public List<TestCase<String>> generate() {
         return List.of(
-            new TestCase<Attach>()
-                .setInput("welcome to hyperskill\n5")
-                .setAttach(new Attach(
-                    "welcome to hyperskill",
-                    5,
-                    "bjqhtrj yt mdujwxpnqq")),
+            new TestCase<String>()
+                .addArguments(
+                    "-mode", "enc",
+                    "-key", "5",
+                    "-in", "in.txt",
+                    "-out", "output.txt"
+                )
+                .setAttach("\\jqhtrj%yt%m~ujwxpnqq&")
+                .addFile("in.txt", "Welcome to hyperskill!"),
 
-            new TestCase<Attach>()
-                .setInput("treasure\n10")
-                .setAttach(new Attach(
-                    "treasure",
-                    10,
-                    "dbokcebo"
-                )),
+            new TestCase<String>()
+                .addArguments(
+                    "-key", "0",
+                    "-mode", "enc",
+                    "-in", "input.txt",
+                    "-out", "output.txt"
+                )
+                .setAttach("Hello")
+                .addFile("input.txt", "Hello"),
 
-            new TestCase<Attach>()
-                .setInput("qdvdqvrxqwxrxwpvrxspvxiqgdiqarairpbiqqid\n12")
-                .setAttach(new Attach(
-                    "qdvdqvrxqwxrxwpvrxspvxiqgdiqarairpbiqqid",
-                    12,
-                    "cphpchdjcijdjibhdjebhjucspucmdmudbnuccup"
-                )),
+            new TestCase<String>()
+                .addArguments(
+                    "-key", "1",
+                    "-in", "i.txt",
+                    "-out", "output.txt",
+                    "-mode", "enc"
+                )
+                .setAttach("123456789")
+                .addFile("i.txt", "012345678"),
 
-            new TestCase<Attach>()
-                .setInput("y\n10")
-                .setAttach(new Attach(
-                    "y",
-                    10,
-                    "i"
-                ))
+            new TestCase<String>()
+                .addArguments(
+                    "-mode", "dec",
+                    "-in", "input.txt",
+                    "-out", "output.txt",
+                    "-key", "5"
+                )
+                .setAttach("Welcome to hyperskill!")
+                .addFile("input.txt", "\\jqhtrj%yt%m~ujwxpnqq&"),
+
+            new TestCase<String>()
+                .addArguments(
+                    "-mode", "dec",
+                    "-key", "0",
+                    "-in", "input.txt",
+                    "-out", "output.txt"
+                )
+                .setAttach("Hi")
+                .addFile("input.txt", "Hi"),
+
+            new TestCase<String>()
+                .addArguments(
+                    "-mode", "dec",
+                    "-key", "1",
+                    "-in", "input.txt",
+                    "-out", "output.txt"
+                )
+                .setAttach("111122223333")
+                .addFile("input.txt", "222233334444")
         );
     }
 
     @Override
-    public CheckResult check(String reply, Attach attach) {
-        String clue = attach.output;
-        reply = reply.trim();
-        clue = clue.trim();
-        boolean isCorrect = reply.equals(clue);
-        if (isCorrect) {
-            return CheckResult.correct();
+    public CheckResult check(String reply, String clue) {
+        String fileName = "output.txt";
+        String output;
+
+        try {
+            Path path = Paths.get(FileUtils.CURRENT_DIR + fileName);
+            output = Files.readString(path, StandardCharsets.UTF_8);
+        } catch (NoSuchFileException e) {
+            return new CheckResult(false, "File output.txt not found!");
+        } catch (IOException e) {
+            return new CheckResult(false, "Cannot read from file!");
         }
-        if (reply.length() != clue.length()) {
-            return CheckResult.wrong(
-                "You should output a line with length " +
-                    clue.length() + ". " + "You output a " +
-                    "line with length " + reply.length()
-            );
+
+        if (!output.trim().equals(clue.trim())) {
+            return new CheckResult(false, "Wrong result in the file!");
         }
-        for (int i = 0; i < clue.length(); i++) {
-            if (reply.charAt(i) != clue.charAt(i)) {
-                return CheckResult.wrong(
-                    "Your " + (i+1) + "-th character '" + reply.charAt(i) + "'" +
-                        " is incorrect. \n" +
-                    "The right one is '" + clue.charAt(i) + "'. \n" +
-                        "Key is " + attach.shift
-                );
-            }
-        }
-        return CheckResult.correct();
+
+        return new CheckResult(true);
     }
 }
