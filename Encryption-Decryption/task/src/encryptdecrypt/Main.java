@@ -321,11 +321,8 @@ class EncryptorDecryptorHandler {
 
 public class Main {
     public static void main(String[] args) {
-        //String[] testArgs = {"-alg", "shift", "-mode", "dec", "-key", "1", "-out", "input.txt", "-in", "output.txt"};
         String[] testArgs = {"-alg", "shift", "-mode", "enc", "-key", "26", "-in", "in.txt", "-out", "output.txt"};
-        //String[] testArgs = {"-alg", "shift", "-mode", "enc", "-key", "5", "-data", "Welcome", "to", "hyperskill!"};
         Config config = new Config(args);
-        //Config config = new Config(testArgs);
         EncryptorDecryptorHandler handler = new EncryptorDecryptorHandler(config);
         handler.run();
     }
